@@ -32,7 +32,7 @@ void            multipouet_reset(t_multipouet *x);
 void            multipouet_set(t_multipouet *x, t_floatarg f);
 void            multipouet_bound(t_multipouet *x, t_floatarg min, t_floatarg max);
 
-/*
+/*3
  * Q.3 - Comportement en cas de message bang
  */
 void            multipouet_bang(t_multipouet *x);

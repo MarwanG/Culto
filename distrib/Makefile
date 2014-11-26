@@ -12,7 +12,7 @@
 #
 
 # add your .c source files, one object per file
-SOURCES = horloge.c #multipouet.c
+SOURCES = horloge.c multipouet.c
 
 # If you need to override the shitty Apple-LLVM CC (like me)
 CC = /usr/bin/gcc
