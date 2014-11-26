@@ -1,0 +1,27 @@
+#N canvas 744 104 659 337 10;
+#X obj 31 205 multipouet;
+#X obj 31 271 print out;
+#X obj 404 264 print arg_out;
+#X obj 404 206 multipouet -1 0 100;
+#X obj 31 58 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 404 145 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 123 271 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 515 266 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X floatatom 59 153 5 0 0 0 - - -, f 5;
+#X msg 88 177 0 23;
+#X msg 58 87 set 2;
+#X msg 58 120 reset;
+#X connect 0 0 1 0;
+#X connect 0 1 6 0;
+#X connect 3 0 2 0;
+#X connect 3 1 7 0;
+#X connect 4 0 0 0;
+#X connect 5 0 3 0;
+#X connect 8 0 0 1;
+#X connect 9 0 0 2;
+#X connect 10 0 0 0;
+#X connect 11 0 0 0;

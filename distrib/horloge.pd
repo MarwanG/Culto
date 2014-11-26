@@ -1,0 +1,7 @@
+#N canvas 334 163 287 216 10;
+#X obj 106 88 horloge;
+#X obj 106 125 print time;
+#X obj 106 50 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X connect 0 0 1 0;
+#X connect 2 0 0 0;
