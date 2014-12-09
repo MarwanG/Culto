@@ -15,7 +15,7 @@ t_int *duck_tilde_perform (t_int *w);
 
 void duck_tilde_dsp(t_duck_tilde *x,t_signal **sp);
 
-void duck_tilde_free(t_pan_tilde *x);
+void duck_tilde_free(t_duck_tilde *x);
 
 void *duck_tilde_new(void);
 
