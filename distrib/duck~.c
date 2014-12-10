@@ -4,23 +4,21 @@
 t_int *duck_tilde_perform (t_int *w){
     int mean = 0;
     int valTmp = 0, i;
-    t_sample* vec2 = (t_sample*)w[2];
-    t_sample* vec1 = (t_sample*)w[1];
-    for(i=0;i<w[4];i++){
+    t_sample* vec2 = (t_sample*)w[3];
+    t_sample* vec1 = (t_sample*)w[2];
+    for(i=0;i<w[5];i++){
         valTmp = vec2[i];
         if (valTmp < 0)
             valTmp = - valTmp;
         mean = mean + valTmp;
     }
-    mean = mean/w[4];
-    t_sample* output = (t_sample*)w[3];
+    mean = mean/w[5];
+    t_sample* output = (t_sample*)w[4];
 
-    for(i=0;i<w[4];i++){
+    for(i=0;i<w[5];i++){
         output[i] = vec1[i] * mean;
     }
-
-
-    return 0;
+    return w+6;
 }
 
 void duck_tilde_dsp(t_duck_tilde *x,t_signal **sp){
