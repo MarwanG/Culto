@@ -29,7 +29,7 @@ void *duck_tilde_new(void){
 
 //DONE
 void duck_tilde_setup(void){
-   duck_tilde_class = class_new(gensym("duck"),
+   duck_tilde_class = class_new(gensym("duck~"),
 				(t_newmethod)duck_tilde_new, (t_method)duck_tilde_free
                               , sizeof(t_duck_tilde),
 				 CLASS_DEFAULT, 0 );
