@@ -1,4 +1,5 @@
 #include "myftt~.h"
+#include <math.h>
 
 
 t_int* myftt_tilde_perform(t_int *w){
@@ -10,8 +11,17 @@ t_int* myftt_tilde_perform(t_int *w){
   }
   cpt = cpt + w[5];
   if(cpt >= 2048){
-    
+    /*Applic un fenetre de Hamming*/
+    int T = 2048; /*Je suis pas sur c pas marque et on ligne c le length*/
+    for(i=0;i<2048;i++){
+      if(buffer[i] > 2048 || buffer[i] < 0){
+	buffer[i] = 0.54 - (0.46 * cos(2 * PI *(buffer[i]/T)));
+      }else{
+	buffer[i] = 0;
+      }
+    }
   }
+  return w+6;
 }
 
 
