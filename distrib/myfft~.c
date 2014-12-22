@@ -2,12 +2,21 @@
 
 
 t_int* myftt_tilde_perform(t_int *w){
+  int i;
+  t_sample* vec1 = (t_sample*)w[2];
+  int * buffer = w[0]->buffer;
+  for(i=0;i<w[5];i++){
+    buffer[w[0]->cpt+i] = vec1[i];
+  }
+  cpt = cpt + w[5];
+  if(cpt >= 2048){
+    
+  }
 }
 
 
 void myfft_tilde_dsp(t_myftt_tilde *x,t_signal **sp){
-
-
+ dsp_add(myftt_tilde_perform, 5, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, sp[0]->s_n); 
 }
 
 void myfft_tilde_free(t_myftt_tilde *x){
@@ -19,6 +28,8 @@ void *myfft_tilde_new(void){
   t_myftt_tilde *t;
   t = (t_myftt_tilde*)pd_new(myftt_tilde_class);
   t->x_out = outlet(&t->x_obj,&s_signal);
+  t->buffer = malloc(2048 * sizeof int);
+  t->cpt = 0;
   return (void*)t;
 }
 
@@ -33,3 +44,6 @@ void myfft_tilde_setup(void){
   CLASS_MAINSIGNALIN(myfft_tilde_class,t_duck_tilde,f);
  
 }
+
+
+    
