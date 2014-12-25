@@ -1,0 +1,12 @@
+#N canvas 0 22 450 300 10;
+#X obj 175 50 matrix_mul_stat~ 2 4;
+#X obj 175 78 matrix_mul_line8~ 2 4 100;
+#X obj 174 107 matrix_mul_line~ 2 4 100;
+#X obj 174 143 matrix_diag_mul_stat~ 3;
+#X obj 174 170 matrix_diag_mul_line8~ 3 100;
+#X obj 173 199 matrix_diag_mul_line~ 3 100;
+#X obj 172 237 matrix_bundle_stat~ 4 2;
+#X obj 63 52 switch~;
+#X obj 63 30 tgl 15 0 empty empty empty 0 -6 0 8 -260818 -1 -1 0 1
+;
+#X connect 8 0 7 0;

@@ -1,0 +1,3 @@
+#N canvas 0 22 450 300 10;
+#X obj 44 53 bin_ambi_reduced_decode_fft2 3 a b c d 1 2 3 4 512;
+#X obj 44 81 bin_ambi_reduced_decode_fir2 3 a b c 1 2 3 4 512;
