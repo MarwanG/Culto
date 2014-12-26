@@ -12,7 +12,7 @@
 #
 
 # add your .c source files, one object per file
-SOURCES = horloge.c multipouet.c duck~.c myfft~.c
+SOURCES = pan~.c horloge.c multipouet.c duck~.c myfft~.c
 
 # If you need to override the shitty Apple-LLVM CC (like me)
 CC = /usr/bin/gcc
@@ -23,7 +23,7 @@ LDFLAGS =
 LIBS =
 
 # You need to edit this to have the PD includes !
-PD_PATH = /Applications/Pd-0.46-2-64bit.app/Contents/Resources/src
+PD_PATH = /Applications/Pd-0.46-3-64bit.app/Contents/Resources/src
 PD_INCLUDE = $(PD_PATH)/src
 
 # where to install the library, overridden below depending on platform
