@@ -1,6 +1,7 @@
 #include <math.h>
+#include <stdlib.h>
 #include "myfft~.h"
-
+#define BUFFER_LEN 4096
 
 t_int* myftt_tilde_perform(t_int *w){
   int i;
@@ -13,17 +14,17 @@ t_int* myftt_tilde_perform(t_int *w){
     buffer[x->cpt+i] = vec1[i];
   }
   x->cpt = x->cpt + w[5];
-  if(x->cpt >= 2048){
+  if(x->cpt >= BUFFER_LEN){
     /*Applic un fenetre de Hamming*/
-    int T = 2048; /*Je suis pas sur c pas marque et on ligne c le length*/
-    for(i=0;i<2048;i++){
-      if(buffer[i] > 2048 || buffer[i] < 0){
-	buffer[i] = 0.54 - (0.46 * cos(2 * PI *(buffer[i]/T)));
+    int T = BUFFER_LEN; /*Je suis pas sur c pas marque et on ligne c le length*/
+    for(i=0;i<BUFFER_LEN;i++){
+      if(buffer[i] > BUFFER_LEN || buffer[i] < 0){
+	    buffer[i] = 0.54 - (0.46 * cos(2 * PI *(buffer[i]/T)));
       }else{
-	buffer[i] = 0;
+	    buffer[i] = 0;
       }
     }
-    for(i=0;i<2048;i++){
+    for(i=0;i<BUFFER_LEN;i++){
       output[i] = buffer[i];
     }
   }
@@ -45,7 +46,7 @@ void *myfft_tilde_new(void){
   t = (t_myfft_tilde*)pd_new(myfft_tilde_class);
   t->x_out = outlet_new(&t->x_obj,&s_signal);
   printf("kaka");
-  t->buffer = (int*)malloc(2048 * sizeof (int));
+  t->buffer = (int*)malloc(BUFFER_LEN * sizeof (int));
   t->cpt = 0;
   return (void*)t;
 }
