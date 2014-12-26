@@ -5,49 +5,78 @@
 
 t_int* myftt_tilde_perform(t_int *w){
   int i;
-  t_myfft_tilde *x = (t_myfft_tilde *) w[1];
+  t_myfft_tilde *x = (t_myfft_tilde *) (w[1]);
+  int * buffer = (int*)x->buffer;
+  printf("coucou1\n");
+  printf("%d\n",x->cpt);
+
   
-  t_sample* vec1 = (t_sample*)w[2];
-  int * buffer = x->buffer;
-  t_sample* output = (t_sample*)w[4];
-  for(i=0;i<w[5];i++){
+  t_sample* vec1 = (t_sample*) w[2];
+  /*vec1 = (t_sample*) realloc(vec1, (2*BUFFER_LEN)*sizeof(t_sample));
+  if (vec1 == NULL){
+    perror("malloc");
+    exit(EXIT_FAILURE);
+  }*/
+  t_sample* output = (t_sample*) w[3];
+  /*output = (t_sample*) realloc(output, (2*BUFFER_LEN)*sizeof(t_sample));
+  if (output == NULL){
+    perror("malloc");
+    exit(EXIT_FAILURE);
+  }*/
+  printf("coucou2\n");
+  for(i=0;i<w[4];i++){
     buffer[x->cpt+i] = vec1[i];
   }
-  x->cpt = x->cpt + w[5];
-  if(x->cpt >= BUFFER_LEN){
+  printf("coucou3 %d\n",x->cpt);
+  x->cpt = x->cpt + w[4];
+  printf("coucou4 %d\n",x->cpt);
+  if(x->cpt+w[4] >= BUFFER_LEN){
     /*Applic un fenetre de Hamming*/
-    int T = BUFFER_LEN; /*Je suis pas sur c pas marque et on ligne c le length*/
+  printf("coucou5\n");
     for(i=0;i<BUFFER_LEN;i++){
-      if(buffer[i] > BUFFER_LEN || buffer[i] < 0){
-	    buffer[i] = 0.54 - (0.46 * cos(2 * PI *(buffer[i]/T)));
+      if(buffer[i] < BUFFER_LEN || buffer[i] < 0){
+	    buffer[i] = 0.54 - (0.46 * cos(2 * PI *(buffer[i]/BUFFER_LEN)));
       }else{
 	    buffer[i] = 0;
       }
     }
-    for(i=0;i<BUFFER_LEN;i++){
+  printf("coucou6\n");
+    for(i=0;i<w[4];i++){
       output[i] = buffer[i];
     }
+    int j=0;
+    for(i=w[4];i<BUFFER_LEN;i++){
+        buffer[j] = buffer[i];
+        j++;
+    }
+    x->cpt = j;
   }
-  return w+6;
+  return w+5;
 }
 
 
 void myfft_tilde_dsp(t_myfft_tilde *x,t_signal **sp){
- dsp_add(myftt_tilde_perform, 5, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, sp[0]->s_n); 
+  printf("tilde_dsp\n");
+  printf("point %p\n",(void*)x);
+  dsp_add(myftt_tilde_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, sp[0]->s_n); 
+  printf("tilde_dsp done\n");
 }
 
 void myfft_tilde_free(t_myfft_tilde *x){
+  printf("tilde_free\n");
   outlet_free(x->x_out);
 }
 
 
 void *myfft_tilde_new(void){
+  printf("tile_new\n");
   t_myfft_tilde *t;
   t = (t_myfft_tilde*)pd_new(myfft_tilde_class);
   t->x_out = outlet_new(&t->x_obj,&s_signal);
-  printf("kaka");
-  t->buffer = (int*)malloc(BUFFER_LEN * sizeof (int));
+  printf("coucou new 1\n");
+  t->buffer = (t_sample*)malloc(BUFFER_LEN * sizeof (t_sample));
   t->cpt = 0;
+  printf("coucou new 2\n");
   return (void*)t;
 }
 
@@ -57,10 +86,13 @@ void myfft_tilde_setup(void){
 				       (t_method)myfft_tilde_free,
 				       sizeof(t_myfft_tilde),
 				       CLASS_DEFAULT,0);
+  printf("tile_newd done\n");
   class_addmethod(myfft_tilde_class,(t_method)myfft_tilde_dsp,gensym("dsp"),0);
+  printf("tile_dsp done\n");
 
   CLASS_MAINSIGNALIN(myfft_tilde_class,t_myfft_tilde,f);
  
+  printf("tile_setup done\n");
 }
 
 

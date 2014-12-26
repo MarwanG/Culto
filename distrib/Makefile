@@ -23,7 +23,7 @@ LDFLAGS =
 LIBS =
 
 # You need to edit this to have the PD includes !
-PD_PATH = /Applications/Pd-0.46-2-64bit.app/Contents/Resources/
+PD_PATH = /Applications/Pd-0.46-3-64bit.app/Contents/Resources/
 PD_INCLUDE = $(PD_PATH)/src
 
 # where to install the library, overridden below depending on platform
