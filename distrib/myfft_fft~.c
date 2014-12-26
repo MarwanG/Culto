@@ -1,5 +1,5 @@
 #include <math.h>
-#include "fftease.h"
+//#include "fftease.h"
 
 void            init_rdft(int n, int *ip, float *w)
 {

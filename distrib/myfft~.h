@@ -13,7 +13,6 @@
 # define _myfft_TILDE_H_
 
 # include "m_pd.h"
-#include "myfft_fft.h"
 
 #ifndef PI
 #define PI 3.1415926535897946264338327950288419716939937510
