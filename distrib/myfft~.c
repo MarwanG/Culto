@@ -27,20 +27,16 @@ t_int* myftt_tilde_perform(t_int *w){
   for(i=0;i<w[4];i++){
     buffer[x->cpt+i] = vec1[i];
   }
-  printf("coucou3 %d\n",x->cpt);
-  x->cpt = x->cpt + w[4];
-  printf("coucou4 %d\n",x->cpt);
   if(x->cpt+w[4] >= BUFFER_LEN){
     /*Applic un fenetre de Hamming*/
-  printf("coucou5\n");
-    for(i=0;i<BUFFER_LEN;i++){
+    for(i=x->cpt;i<BUFFER_LEN;i++){
       if(buffer[i] < BUFFER_LEN || buffer[i] < 0){
 	    buffer[i] = 0.54 - (0.46 * cos(2 * PI *(buffer[i]/BUFFER_LEN)));
       }else{
 	    buffer[i] = 0;
       }
     }
-  printf("coucou6\n");
+    x->cpt = x->cpt + w[4];
     for(i=0;i<w[4];i++){
       output[i] = buffer[i];
     }
@@ -50,7 +46,10 @@ t_int* myftt_tilde_perform(t_int *w){
         j++;
     }
     x->cpt = j;
+    init_rdft(w[4], x->bitshuffle, x->weighting);
+    rdft(w[4], 0, output, x->bitshuffle, x->weighting);
   }
+
   return w+5;
 }
 
@@ -65,6 +64,7 @@ void myfft_tilde_dsp(t_myfft_tilde *x,t_signal **sp){
 void myfft_tilde_free(t_myfft_tilde *x){
   printf("tilde_free\n");
   outlet_free(x->x_out);
+  free(x->buffer);
 }
 
 
