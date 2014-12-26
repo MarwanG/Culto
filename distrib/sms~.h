@@ -14,7 +14,9 @@ typedef struct _sms_tilde
 	 t_inlet    *in4;
 	 int        buffer_size;
 	 t_float    seuil;
-	 t_float    info;
+     int        bypass;
+     int        autonorm;
+	 t_gpointer *info;
 	 t_outlet   *out;
 	 t_sample   *buffer;
 	 t_sample   f;
