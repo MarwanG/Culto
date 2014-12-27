@@ -48,6 +48,8 @@ t_int* myftt_tilde_perform(t_int *w){
         j++;
     }
     x->cpt = j;
+    x->bitshuffle = NULL;
+    x->weighting = NULL;
     init_rdft(w[4], x->bitshuffle, x->weighting);
     rdft(w[4], 0, output, x->bitshuffle, x->weighting);
   }

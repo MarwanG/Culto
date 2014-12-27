@@ -18,85 +18,163 @@ void fen_hamming(t_sample* buf, int size){
 
 
 t_int *sms_tilde_perform (t_int *w){
+    printf("Starting Perform...\n");
     t_sms_tilde* x = (t_sms_tilde*) w[1];
     t_sample* in_srcHarm = (t_sample*) w[2];
     t_sample* in_srcMod = (t_sample*) w[3];
     t_sample* out = (t_sample*) w[4];
+    t_sample* bufferHarm = x->bufferHarm;
+    t_sample* bufferMod = x->bufferMod;
     int vecSize = (int) w[5];
     int i=0, inGain=0, curGain=0, outGain=0, finalGain=0;
-    int* bitshuffle = NULL;
-    float* weightning = NULL;
-
+    printf("bp : %d\n",x->bypass);
+    printf("ano : %d\n",x->autonorm);
+    printf("seuil : %f\n",x->seuil);
+    
+    /* Buffer gestion */
+    for (i = 0; i < vecSize; i++) { // Filling buffers with incoming data
+        if (x->cptBufHarm < x->buffer_size && x->cptBufMod < x->buffer_size) {
+            bufferHarm[x->cptBufHarm] = in_srcHarm[i];
+            bufferMod[x->cptBufMod] = in_srcMod[i];
+            x->cptBufHarm++;
+            x->cptBufMod++;
+        }
+    }
     if (x->bypass == 1){ // if bypass
         for (i = 0; i < vecSize; i++) {
             out[i] = in_srcHarm[i];
         }
+        int j=0;
+        for (i = vecSize; i < x->cptBufHarm; i++) { 
+        // removing the $vecSize first data of the buffer
+            bufferHarm[j] = bufferHarm[i];
+            j++;
+        }
+        x->cptBufHarm -= vecSize;
         return w+6;
     }
-    /* Buffer gestion */
-    t_sample* dupHarm = (t_sample*) malloc(vecSize*sizeof(t_sample));
-    t_sample* dupMod = (t_sample*) malloc(vecSize*sizeof(t_sample));
+    printf("cptO : %d, vecS : %d\n",x->cptOut,vecSize);
+    if (x->cptOut < vecSize){
+    //If our output buffer is already ready to out, skip the process
+    //The data is stored in other buffers anyway
+        printf("Step 1\n");
+        /*
+        t_sample* dupHarm = (t_sample*) malloc((2+vecSize)*sizeof(t_sample));
+        t_sample* dupMod = (t_sample*) malloc((2+vecSize)*sizeof(t_sample));
+        for (i = 0; i < vecSize; i++) {
+            dupHarm[i] = in_srcHarm[i];
+            dupMod[i] = in_srcMod[i];
+        }*/
+        printf("Step 2\n");
+        printf("Step 3\n");
+        int minCpt=0, maxCpt=0; // getting the size of the smaller buffer
+        if (x->cptBufHarm > x->cptBufMod){
+            minCpt = x->cptBufMod;
+            maxCpt = x->cptBufHarm;
+        }else {
+            minCpt = x->cptBufHarm;
+            maxCpt = x->cptBufMod;
+        }
+            
+        fen_hamming(bufferHarm, minCpt);
+        fen_hamming(bufferMod, minCpt);
+
+        int* bitshuffle=NULL;
+        bitshuffle = (int*)malloc((2*minCpt)*sizeof(int));
+        float* weightning=NULL;
+        weightning = (float*)malloc((2*minCpt)*sizeof(float));
+        init_rdft(minCpt, bitshuffle, weightning);
+        printf("Step 4\n");
+        rdft(minCpt, 1, bufferHarm, bitshuffle, weightning);
+        rdft(minCpt, 1, bufferMod, bitshuffle, weightning);
+        printf("Step 5\n");
+
+
+        if (x->autonorm == 1){ // if autonorm
+            inGain=0;
+            for (i = 0; i < minCpt-1; i+=2) {
+                inGain += fabsf(bufferHarm[i]-bufferHarm[i+1]);
+            }
+        } 
+        float* tmp1=NULL; 
+        float* tmp2=NULL;
+        tmp1 = (float*)malloc(x->buffer_size*sizeof(float));
+        if(tmp1 == NULL){
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+        tmp2 = (float*)malloc(x->buffer_size*sizeof(float));
+        if(tmp2 == NULL){
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+        
+        for (i = 0; i < minCpt-1; i+=2) {
+            curGain = fabsf(bufferMod[i]-bufferMod[i+1]);
+            if (curGain > x->seuil) {
+                tmp1[i] = fabsf(bufferHarm[i]-bufferHarm[i+1]);
+            }
+            tmp1[i+1] = - atan2(bufferHarm[i+1], bufferHarm[i]);
+            tmp2[i] = tmp1[i] * cos(tmp1[i+1]);
+            tmp2[i+1] = -tmp1[i] * sin(tmp1[i+1]);
+        }
+        
+        if (x->autonorm == 1) {
+            outGain = 0;
+            for (i = 0; i < minCpt-1; i+=2) {
+                outGain += fabsf(tmp2[i]-tmp2[i+1]);
+            }
+            finalGain = inGain/outGain;
+        }else {
+            finalGain = 1;
+        }
+        rdft(minCpt, -1, tmp2, bitshuffle, weightning);
+
+        for (i = 0; i < minCpt; i++) { // filling the output buffer
+            if(x->cptOut < x->buffer_size){
+                tmp2[i] = tmp2[i]/finalGain;
+                x->bufferOut[x->cptOut] = tmp2[i];
+                x->cptOut++;
+                printf("test\n");
+            }
+        }
+        // We empty the buffers, data is already processed and stored in bufferOut
+        int j=0;
+        for (i = minCpt; i < x->cptBufHarm; i++) {
+            bufferHarm[j] = bufferHarm[i];
+            j++;
+        }
+        x->cptBufHarm -= minCpt;
+        j=0;
+        for (i = minCpt; i< x->cptBufMod; i++){
+            bufferMod[j] = bufferMod[i];
+            j++;
+        }
+        x->cptBufMod -= minCpt;
+
+        free(tmp1);
+        free(tmp2);
+        free(bitshuffle);
+        free(weightning);
+    }
+    // Filling the real output vector
     for (i = 0; i < vecSize; i++) {
-        dupHarm[i] = in_srcHarm[i];
-        dupMod[i] = in_srcMod[i];
+        out[i] = x->bufferOut[i];
     }
-    fen_hamming(dupHarm, vecSize);
-    fen_hamming(dupMod, vecSize);
-    init_rdft(vecSize, bitshuffle, weightning);
-    rdft(vecSize, 1, dupHarm, bitshuffle, weightning);
-    rdft(vecSize, 1, dupMod, bitshuffle, weightning);
+    int j=0;
+    for (i = vecSize; i < x->cptOut; i++) {
+        x->bufferOut[j] = x->bufferOut[i];
+        j++;
+    }
+    printf("coucou %d\n",x->cptOut);
+    x->cptOut -= vecSize;
 
-
-    if (x->autonorm == 1){ // if autonorm
-        inGain=0;
-        for (i = 0; i < vecSize-1; i+=2) {
-            inGain += fabsf(dupHarm[i]-dupHarm[i+1]);
-        }
-    } 
-    float* tmp1=NULL; 
-    float* tmp2=NULL;
-    tmp1 = (float*)malloc(vecSize*sizeof(float));
-    if(tmp1 == NULL){
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-    tmp2 = (float*)malloc(vecSize*sizeof(float));
-    if(tmp2 == NULL){
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-    
-    for (i = 0; i < vecSize-1; i+=2) {
-        curGain = fabsf(dupMod[i]-dupMod[i+1]);
-        if (curGain > x->seuil) {
-            tmp1[i] = fabsf(dupHarm[i]-dupHarm[i+1]);
-        }
-        tmp1[i+1] = - atan2(dupHarm[i+1], dupHarm[i]);
-        tmp2[i] = tmp1[i] * cos(tmp1[i+1]);
-        tmp2[i+1] = -tmp1[i] * sin(tmp1[i+1]);
-    }
-    
-    if (x->autonorm == 1) {
-        outGain = 0;
-        for (i = 0; i < vecSize; i+=2) {
-            outGain += fabsf(tmp2[i]-tmp2[i+1]);
-        }
-        finalGain = inGain/outGain;
-    }else {
-        finalGain = 1;
-    }
-    rdft(vecSize, -1, tmp2, bitshuffle, weightning);
-    for (i = 0; i < vecSize; i++) {
-        tmp2[i] = tmp2[i]/finalGain;
-        out[i] = tmp2[i];
-    }
-
-    printf("coucou\n");
+    printf("coucou %d\n",x->cptOut);
     return w+6;
 }
 
 void sms_tilde_dsp(t_sms_tilde *x,t_signal **sp){
-    dsp_add(sms_tilde_perform, 5, x, sp[0]->s_vec, sp[1]->s_vec, sp[4]->s_vec, sp[0]->s_n); 
+    dsp_add(sms_tilde_perform, 5, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, sp[0]->s_n); 
 
 }
 
@@ -106,7 +184,8 @@ void sms_tilde_free(t_sms_tilde *x){
 	inlet_free(x->in3);
 	inlet_free(x->in4);
 	outlet_free(x->out);
-	free(x->buffer);
+	free(x->bufferHarm);
+	free(x->bufferMod);
 }
 
 void sms_tilde_msg(t_sms_tilde *x, t_floatarg auton, t_floatarg bypa){
@@ -123,14 +202,19 @@ void *sms_tilde_new(t_symbol *s, int argc, t_atom *argv){
     inlet_new(&m->x_obj, &m->x_obj.ob_pd,
             gensym("list"), gensym("msg"));
  	m->out = outlet_new(&m->x_obj,&s_signal);
+    m->bufferOut = (t_sample*)malloc(BUFFER_LEN*sizeof(t_sample));
 
  	//if(argc < 2){
- 		m->buffer = (t_sample*)malloc(BUFFER_LEN * sizeof (t_sample));
+ 		m->bufferHarm = (t_sample*)malloc(BUFFER_LEN * sizeof (t_sample));
+ 		m->bufferMod = (t_sample*)malloc(BUFFER_LEN * sizeof (t_sample));
         m->buffer_size = BUFFER_LEN;
  	/*}else{
  		m->buffer = (t_sample*)malloc(atom_getint(argv) * sizeof (t_sample));
         m->buffer_size = atom_getint(argv);
  	}*/
+    m->cptBufMod = 0;
+    m->cptBufHarm = 0;
+    m->cptOut = 0;
         printf("%d\n",m->buffer_size);
 
  	return (void*) m;
@@ -150,11 +234,15 @@ void sms_tilde_setup(void){
 void            init_rdft(int n, int *ip, float *w)
 {
   int           nw,nc;
-    
+  printf("init rdft\n");
   nw = n >> 2;
+  printf("1\n");
   makewt(nw, ip, w);
+  printf("2\n");
   nc = n >> 2;
+  printf("3\n");
   makect(nc, ip, w + nw);
+  printf("4\n");
   return;
 }
 
