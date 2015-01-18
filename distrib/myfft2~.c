@@ -9,68 +9,51 @@ t_int* myftt_tilde_perform(t_int *w){
   int i;
   t_myfft_tilde *x = (t_myfft_tilde *) (w[1]);
   float * buffer = (float*)x->buffer;
-  printf("coucou1\n");
   printf("%d\n",x->cpt);
 
   
   t_sample* vec1 = (t_sample*) w[2];
-  /*vec1 = (t_sample*) realloc(vec1, (2*BUFFER_LEN)*sizeof(t_sample));
-  if (vec1 == NULL){
-    perror("malloc");
-    exit(EXIT_FAILURE);
-  }*/
     /*Applic un fenetre de Hamming*/
     /*for(i=0;i<w[4];i++){
       if(vec1[i] <= w[4] || vec1[i] <= 0){
-	    vec1[i] = 0.54 - (0.46 * cos(2 * PI *(vec1[i]/w[4])));
       }else{
 	    vec1[i] = 0;
       }
     }*/
-    for (i = 0; i < w[4]; i++) {
-        if(vec1[i] <= w[4] || vec1[i] <= 0){
-            vec1[i] = 0.42 - 0.5*cos(2*PI*(vec1[i]/w[4]) + 0.08*(4*PI*(vec1[i]/w[4])));
-        }else
-            vec1[i]=0;
-    }
-  t_sample* output = (t_sample*) w[3];
-  /*output = (t_sample*) realloc(output, (2*BUFFER_LEN)*sizeof(t_sample));
-  if (output == NULL){
-    perror("malloc");
-    exit(EXIT_FAILURE);
-  }*/
-  printf("coucou2 %d\n",(int)w[4]);
+    t_sample* output = (t_sample*) w[3];
   for(i=0;i<w[4];i++){
+    if (x->cpt >= BUFFER_LEN)
+        break;
     buffer[x->cpt+i] = vec1[i];
   }
   x->cpt += w[4];
+
+
   if(x->cpt >= BUFFER_LEN){
-        printf("coucou rdft %d\n",x->cpt_rdft);
-/*    if(x->cpt_rdft <= 0){
-        rdft(BUFFER_LEN, 1, buffer, x->bitshuffle, x->weighting);
-        x->cpt_rdft = BUFFER_LEN-1;
-    }*/
-    for(i=0;i<w[4];i++){
-      output[i] = buffer[i];
+    for (i = 0; i < BUFFER_LEN; i++) {
+        if(buffer[i] <= BUFFER_LEN && buffer[i] >= 0){
+	        x->bufOut[i] = buffer[i] * (0.54 - (0.46 * cos(2 * PI *(buffer[i]/w[4]))));
+            //x->bufOut[i] = 0.42 - 0.5*cos(2*PI*(buffer[i]/BUFFER_LEN) + 0.08*(4*PI*(buffer[i]/BUFFER_LEN)));
+        }else
+            x->bufOut[i]=0;
     }
-    int j=0;
-    for(i=w[4];i<BUFFER_LEN;i++){
-        buffer[j] = buffer[i];
-        j++;
-    }
-    rdft(w[4], 1, output, x->bitshuffle, x->weighting);
-    x->cpt -= w[4];
-    x->cpt_rdft -= w[4];
+    rdft(BUFFER_LEN, 1, x->bufOut, x->bitshuffle, x->weighting);
+    x->cpt = 0;
+    x->cpt_out = 0;
   }
+  if (x->cpt_out != -1) {
+      for(i=0;i<w[4];i++){
+        output[i] = x->bufOut[i+x->cpt_out];
+      }
+      x->cpt_out += w[4];
+  }
+  printf("out : %d\n",x->cpt_out);
   return w+5;
 }
 
 
 void myfft_tilde_dsp(t_myfft_tilde *x,t_signal **sp){
-  printf("tilde_dsp\n");
-  printf("point %p\n",(void*)x);
   dsp_add(myftt_tilde_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, sp[0]->s_n); 
-  printf("tilde_dsp done\n");
 }
 
 void myfft_tilde_free(t_myfft_tilde *x){
@@ -89,11 +72,10 @@ void *myfft_tilde_new(void){
   t->bitshuffle = malloc(2*1024*sizeof(t->bitshuffle));
   t->weighting = malloc(2*1024*sizeof(t->weighting));
   init_rdft(1024, t->bitshuffle, t->weighting);
-  printf("coucou new 1\n");
   t->buffer = (t_sample*)malloc(BUFFER_LEN * sizeof (t_sample));
+  t->bufOut = (t_sample*)malloc(BUFFER_LEN * sizeof (t_sample));
   t->cpt = 0;
-  t->cpt_rdft = 0;
-  printf("coucou new 2\n");
+  t->cpt_out = -1;
   return (void*)t;
 }
 
@@ -103,9 +85,7 @@ void myfft_tilde_setup(void){
 				       (t_method)myfft_tilde_free,
 				       sizeof(t_myfft_tilde),
 				       CLASS_DEFAULT,0);
-  printf("tile_newd done\n");
   class_addmethod(myfft_tilde_class,(t_method)myfft_tilde_dsp,gensym("dsp"),0);
-  printf("tile_dsp done\n");
 
   CLASS_MAINSIGNALIN(myfft_tilde_class,t_myfft_tilde,f);
  

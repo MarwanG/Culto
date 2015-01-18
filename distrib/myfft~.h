@@ -32,8 +32,11 @@ typedef struct      _myfft_tilde
     int             *bitshuffle;
     float           *weighting;
     float           *window;
-    t_sample        *buffer;
+    float           *buffer;
+    float           *bufOut;
     int             cpt;
+    int             cpt_out;
+    int             cpt_rdft;
 }
 t_myfft_tilde;
 

@@ -20,8 +20,9 @@ typedef struct _sms_tilde
 	 t_sample   *bufferHarm;
 	 t_sample   *bufferMod;
      t_sample   *bufferOut;
-     int        cptBufHarm;
-     int        cptBufMod;
+     int        *bitshuffle;
+     float      *weightning;
+     int        cpt;
      int        cptOut;
 	 t_sample   f;
 }t_sms_tilde;
